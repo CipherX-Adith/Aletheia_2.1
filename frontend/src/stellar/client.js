@@ -96,7 +96,10 @@ export async function signTransactionWithFreighter({ investorAddress, paymentUsd
   const { signTransaction } = await import('@stellar/freighter-api');
   const { TransactionBuilder, BASE_FEE, Networks } = await import('@stellar/stellar-sdk');
 
-  const USDC_ISSUER = 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5';
+  const USDC_ISSUER =
+    NETWORK === 'mainnet'
+      ? 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN'
+      : 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5';
   const ESCROW_ADDRESS = import.meta.env.VITE_ESCROW_ADDRESS || investorAddress; // fallback to self in demo
 
   // Load investor account from Horizon

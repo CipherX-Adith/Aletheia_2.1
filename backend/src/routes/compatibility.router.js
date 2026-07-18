@@ -917,6 +917,9 @@ router.post('/wallet/create', async (req, res, next) => {
 
 router.post('/wallet/fund-testnet', async (req, res, next) => {
   try {
+    if (process.env.STELLAR_NETWORK === 'mainnet') {
+      return res.status(400).json({ error: 'Funding faucet is only supported on Stellar Testnet.' });
+    }
     const { address } = req.body;
     if (!address) return res.status(400).json({ error: 'Address is required' });
 

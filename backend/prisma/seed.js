@@ -14,7 +14,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log('Seeding database...');
+  console.log('Seeding database with clean demo credentials...');
 
   // Clean existing data
   await prisma.auditLog.deleteMany({});
@@ -40,9 +40,8 @@ async function main() {
   const exporterHash = await bcrypt.hash('exporter123', 12);
   const investorHash = await bcrypt.hash('investor123', 12);
 
-
   // 1. Platform Admin
-  const adminUser = await prisma.user.create({
+  await prisma.user.create({
     data: {
       email: 'admin@aletheia.trade',
       passwordHash: adminHash,
@@ -53,7 +52,7 @@ async function main() {
     },
   });
 
-  // 2. Exporter Organization
+  // 2. Exporter Organization & User
   const exporterOrg = await prisma.organization.create({
     data: {
       name: 'Global Textiles Export Inc.',
@@ -100,52 +99,18 @@ async function main() {
     },
   });
 
+  // Demo wallet for exporter (with valid format public key)
   await prisma.wallet.create({
     data: {
       organizationId: exporterOrg.id,
-      publicKey: 'GBEXPORTERPUBLICKEYSTELLAR1234567890ABCDEFGHJKLMNOPQ',
+      publicKey: 'GDXYOMBCTA5WHAD2AIOHN5BRMVWCGT7OWLCPKFXI2R3BOK3GM3TTPNRA',
       xlmBalance: 100.0,
       usdcBalance: 5000.0,
+      network: process.env.STELLAR_NETWORK || 'mainnet',
     },
   });
 
-  // 3. Buyer Organization (Counterparty, Offline only - no user portal/login credentials)
-  const buyerOrg = await prisma.organization.create({
-    data: {
-      name: 'Euro Apparel Logistics',
-      legalName: 'Euro Apparel Logistics GmbH',
-      orgType: 'BUYER',
-      country: 'Germany',
-      city: 'Frankfurt',
-      address: '12 Logistics Strasse',
-      taxId: 'TAX-GER-9988',
-      registrationNumber: 'REG-GER-1122',
-    },
-  });
-
-  await prisma.tradePassport.create({
-    data: {
-      organizationId: buyerOrg.id,
-      status: 'ACTIVE',
-      kybStatus: 'APPROVED',
-      trustScore: 92.0,
-      reputationScore: 95.0,
-      activeSince: new Date(),
-      issuedAt: new Date(),
-    },
-  });
-
-  await prisma.wallet.create({
-    data: {
-      organizationId: buyerOrg.id,
-      publicKey: 'GBBUYERPUBLICKEYSTELLAR1234567890ABCDEFGHJKLMNOPQR',
-      xlmBalance: 500.0,
-      usdcBalance: 25000.0,
-    },
-  });
-
-
-  // 4. Investor Organization
+  // 3. Investor Organization & User
   const investorOrg = await prisma.organization.create({
     data: {
       name: 'Apex Trade Yield Fund',
@@ -191,38 +156,18 @@ async function main() {
     },
   });
 
+  // Demo wallet for investor (with valid format public key)
   await prisma.wallet.create({
     data: {
       organizationId: investorOrg.id,
-      publicKey: 'GBINVESTORPUBLICKEYSTELLAR1234567890ABCDEFGHJKLMNO',
+      publicKey: 'GDRVKMIPDQL6QY3L4B54LDR3RST5BGLU37ZJ3T64Z5U235LWL7Q7M3P5',
       xlmBalance: 1000.0,
       usdcBalance: 150000.0,
+      network: process.env.STELLAR_NETWORK || 'mainnet',
     },
   });
 
-  // 5. Sample Receivable (Invoice)
-  const receivable = await prisma.receivable.create({
-    data: {
-      invoiceNumber: 'INV-2026-001',
-      invoiceDate: new Date('2026-07-01'),
-      dueDate: new Date('2026-10-01'),
-      currency: 'USD',
-      totalAmount: 50000.0,
-      discountRate: 2.5,
-      fundingAmount: 48750.0,
-      commodity: 'Finished Cotton Garments',
-      originCountry: 'India',
-      destinationCountry: 'Germany',
-      incoterms: 'FOB',
-      buyerName: 'Euro Apparel Logistics',
-      buyerCountry: 'Germany',
-      status: 'DRAFT',
-      exporterId: exporterOrg.id,
-      buyerId: buyerOrg.id,
-    },
-  });
-
-  console.log('Database seeded successfully.');
+  console.log('Clean database seed completed successfully.');
 }
 
 main()

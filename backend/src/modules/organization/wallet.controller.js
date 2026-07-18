@@ -100,6 +100,9 @@ export async function getTransactions(req, res, next) {
 
 export async function fundTestnet(req, res, next) {
   try {
+    if (env.STELLAR_NETWORK === 'mainnet') {
+      throw AppError.badRequest('Friendbot faucet funding is only supported on Stellar Testnet.');
+    }
     const orgId = req.user.organizationId;
     if (!orgId) throw AppError.badRequest('No organization linked to your account');
     const wallet = await prisma.wallet.findUnique({ where: { organizationId: orgId } });
