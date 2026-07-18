@@ -167,13 +167,14 @@ export default function App() {
         connecting={connecting}
         onConnect={handleConnect}
         onDisconnect={handleDisconnect}
+        onOpenLogin={() => setShowLoginModal(true)}
       />
 
       {/* Main Content Area */}
       <div style={{ flex: 1, paddingTop: 'var(--nav-height)' }}>
         <Routes>
-          <Route path="/" element={<Landing walletAddress={walletAddress} onConnect={handleConnect} onOpenLogin={() => setShowLoginModal(true)} />} />
-          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/" element={<Landing walletAddress={walletAddress} userRole={userRole} onConnect={handleConnect} onOpenLogin={() => setShowLoginModal(true)} />} />
+          <Route path="/marketplace" element={<Marketplace userRole={userRole} onOpenLogin={() => setShowLoginModal(true)} />} />
           <Route path="/trade-passport" element={<TradePassport walletAddress={walletAddress} onConnect={handleConnect} />} />
           <Route path="/wallet" element={<Wallet walletAddress={walletAddress} onConnect={handleConnect} />} />
           <Route path="/receivable/:id" element={<ReceivableDetail walletAddress={walletAddress} onConnect={handleConnect} />} />

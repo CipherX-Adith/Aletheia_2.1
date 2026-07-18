@@ -39,7 +39,7 @@ export default function Login({ isOpen, onClose, onLogin, currentWalletAddress }
 
   const [signupData, setSignupData] = useState({
     username: '', email: '', password: '', confirmPassword: '',
-    full_name: '', company_name: ''
+    firstName: '', lastName: '', company_name: '', country: ''
   });
   const [showSignupPass, setShowSignupPass] = useState(false);
 
@@ -86,23 +86,41 @@ export default function Login({ isOpen, onClose, onLogin, currentWalletAddress }
     e.preventDefault();
     setError('');
     if (signupData.password !== signupData.confirmPassword) { setError('Passwords do not match.'); return; }
-    if (signupData.password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    if (signupData.password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+
+    // Split full_name into firstName / lastName for backend
+    const firstName = isInvestor ? signupData.firstName.trim() : signupData.company_name.trim().split(/\s+/)[0];
+    const lastName = isInvestor ? signupData.lastName.trim() : (signupData.company_name.trim().split(/\s+/).slice(1).join(' ') || 'Co.');
+
+    // orgName: for investors use full name, for exporters use company name
+    const orgName = isInvestor
+      ? `${signupData.firstName.trim()} ${signupData.lastName.trim()}`.trim()
+      : signupData.company_name.trim();
+
     setLoading(true);
     try {
       const res = await fetch(`${API}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: signupData.username, email: signupData.email,
-          password: signupData.password, role: activeTab,
-          full_name: signupData.full_name, company_name: signupData.company_name
+          email: signupData.email,
+          password: signupData.password,
+          firstName,
+          lastName,
+          orgName,
+          orgType: activeTab === 'investor' ? 'INVESTOR' : 'EXPORTER',
+          country: signupData.country || 'India',
         })
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Registration failed.'); setLoading(false); return; }
+      if (!res.ok) {
+        // Show validation errors if present (backend uses data.message + data.errors[].message)
+        const msg = data.errors?.map(e => e.message).join(' · ') || data.message || 'Registration failed.';
+        setError(msg); setLoading(false); return;
+      }
       setSuccess('Account created! You can now sign in.');
       setMode('login');
-      setIdentifier(signupData.username);
+      setIdentifier(signupData.email);
     } catch { setError('Cannot reach server. Make sure the API is running.'); }
     setLoading(false);
   };
@@ -551,15 +569,32 @@ export default function Login({ isOpen, onClose, onLogin, currentWalletAddress }
             {/* ── SIGN UP ── */}
             {mode === 'signup' && (
               <form onSubmit={handleSignup}>
-                <div className="lg-field">
-                  <label className="lg-label">{isInvestor ? 'Full Name' : 'Company Name'}</label>
-                  <input className="lg-input" type="text"
-                    placeholder={isInvestor ? 'Rajesh Kumar Menon' : 'Spice Coast Exports Ltd'}
-                    value={isInvestor ? signupData.full_name : signupData.company_name}
-                    onChange={e => setSignupData(d => ({
-                      ...d, [isInvestor ? 'full_name' : 'company_name']: e.target.value
-                    }))} />
-                </div>
+                {isInvestor ? (
+                  <>
+                    <div className="lg-field">
+                      <label className="lg-label">First Name</label>
+                      <input className="lg-input" type="text" required
+                        placeholder="Rajesh"
+                        value={signupData.firstName}
+                        onChange={e => setSignupData(d => ({ ...d, firstName: e.target.value }))} />
+                    </div>
+                    <div className="lg-field">
+                      <label className="lg-label">Last Name</label>
+                      <input className="lg-input" type="text" required
+                        placeholder="Kumar Menon"
+                        value={signupData.lastName}
+                        onChange={e => setSignupData(d => ({ ...d, lastName: e.target.value }))} />
+                    </div>
+                  </>
+                ) : (
+                  <div className="lg-field">
+                    <label className="lg-label">Company Name</label>
+                    <input className="lg-input" type="text" required
+                      placeholder="Spice Coast Exports Ltd"
+                      value={signupData.company_name}
+                      onChange={e => setSignupData(d => ({ ...d, company_name: e.target.value }))} />
+                  </div>
+                )}
                 <div className="lg-field">
                   <label className="lg-label">Email</label>
                   <input className="lg-input" type="email" required
@@ -594,6 +629,14 @@ export default function Login({ isOpen, onClose, onLogin, currentWalletAddress }
                     placeholder="••••••••••••••••"
                     value={signupData.confirmPassword}
                     onChange={e => setSignupData(d => ({ ...d, confirmPassword: e.target.value }))} />
+                </div>
+
+                <div className="lg-field">
+                  <label className="lg-label">Country</label>
+                  <input className="lg-input" type="text" required
+                    placeholder="e.g. India"
+                    value={signupData.country}
+                    onChange={e => setSignupData(d => ({ ...d, country: e.target.value }))} />
                 </div>
 
                 <button type="submit" className="lg-btn" disabled={loading}>

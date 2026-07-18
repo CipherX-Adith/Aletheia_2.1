@@ -5,7 +5,7 @@ import StatCard from '../components/StatCard.jsx';
 import NetworkStatusIndicator from '../components/NetworkStatusIndicator.jsx';
 import VerifiedBadge from '../components/VerifiedBadge.jsx';
 
-export default function Landing({ walletAddress, onConnect, onOpenLogin }) {
+export default function Landing({ walletAddress, userRole, onConnect, onOpenLogin }) {
   const [liveStats, setLiveStats] = useState(null);
 
   useEffect(() => {
@@ -81,12 +81,39 @@ export default function Landing({ walletAddress, onConnect, onOpenLogin }) {
               marginBottom: 'var(--space-6)' 
             }}
           >
-            <Link to="/marketplace" className="btn btn-primary btn-lg">
-              Marketplace
-            </Link>
-            <button onClick={onOpenLogin} className="btn btn-outline btn-lg">
-              Login
-            </button>
+            {!userRole ? (
+              <div style={{ display: 'flex', gap: 'var(--space-3)', width: '100%', maxWidth: '380px', margin: '0 auto' }}>
+                <button onClick={onOpenLogin} className="btn btn-outline btn-lg" style={{ flex: 1 }}>
+                  Login
+                </button>
+                <Link to="/marketplace" className="btn btn-outline btn-lg" style={{ flex: 1, textAlign: 'center' }}>
+                  Marketplace
+                </Link>
+              </div>
+            ) : (
+              <>
+                {userRole === 'exporter' && (
+                  <Link to="/exporter" className="btn btn-primary btn-lg">
+                    Exporter Portal
+                  </Link>
+                )}
+                {userRole === 'investor' && (
+                  <>
+                    <Link to="/marketplace" className="btn btn-primary btn-lg">
+                      Marketplace
+                    </Link>
+                    <Link to="/dashboard" className="btn btn-outline btn-lg">
+                      Investor Dashboard
+                    </Link>
+                  </>
+                )}
+                {userRole === 'admin' && (
+                  <Link to="/admin" className="btn btn-primary btn-lg">
+                    Admin Panel
+                  </Link>
+                )}
+              </>
+            )}
           </div>
         </div>
       </section>

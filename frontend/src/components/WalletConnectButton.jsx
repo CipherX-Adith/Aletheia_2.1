@@ -2,10 +2,16 @@ import React from 'react';
 import { formatAddress } from '../stellar/client.js';
 
 export default function WalletConnectButton({ walletAddress, connecting, onConnect, onDisconnect }) {
+  const isMock = !walletAddress || 
+    walletAddress.startsWith('GBEXPORTER') || 
+    walletAddress.startsWith('GBINVESTOR') || 
+    walletAddress.startsWith('GDEMO') || 
+    walletAddress.startsWith('USER_');
+
   if (walletAddress) {
     return (
       <div className="flex items-center gap-3">
-        {(walletAddress.startsWith('GDEMO') || walletAddress.startsWith('USER_')) && (
+        {isMock && (
           <button 
             className="btn btn-primary btn-sm" 
             onClick={onConnect}
@@ -21,7 +27,7 @@ export default function WalletConnectButton({ walletAddress, connecting, onConne
             🔗 Link Freighter
           </button>
         )}
-        {!walletAddress.startsWith('USER_') && (
+        {!isMock && (
           <div 
             className="btn btn-outline btn-sm"
             style={{ cursor: 'default', fontFamily: 'monospace' }}

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useReceivables } from '../hooks/useReceivables.js';
 import ReceivableCard from '../components/ReceivableCard.jsx';
 
-export default function Marketplace() {
+export default function Marketplace({ userRole, onOpenLogin }) {
   const { receivables, loading, error } = useReceivables({}, 10000);
   const navigate = useNavigate();
   
@@ -133,7 +133,13 @@ export default function Marketplace() {
               <ReceivableCard 
                 key={receivable.id} 
                 receivable={receivable} 
-                onClick={() => navigate(`/receivable/${receivable.id}`)}
+                onClick={() => {
+                  if (userRole === 'investor') {
+                    navigate(`/receivable/${receivable.id}`);
+                  } else {
+                    if (onOpenLogin) onOpenLogin();
+                  }
+                }}
                 showInvest={receivable.status === 'active'}
               />
             ))}

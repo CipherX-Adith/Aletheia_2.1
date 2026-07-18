@@ -3,9 +3,8 @@ import { NavLink, useLocation } from 'react-router-dom';
 import WalletConnectButton from './WalletConnectButton.jsx';
 import NetworkStatusIndicator from './NetworkStatusIndicator.jsx';
 
-export default function Navbar({ walletAddress, userRole, connecting, onConnect, onDisconnect }) {
+export default function Navbar({ walletAddress, userRole, connecting, onConnect, onDisconnect, onOpenLogin }) {
   const location = useLocation();
-  const isLandingPage = location.pathname === '/';
 
   return (
     <nav className="navbar" style={{
@@ -53,22 +52,32 @@ export default function Navbar({ walletAddress, userRole, connecting, onConnect,
               Home
             </NavLink>
           </li>
-          {!isLandingPage && walletAddress && userRole === 'investor' && (
-            <li>
-              <NavLink to="/dashboard" className={({ isActive }) => isActive ? 'active' : ''}>
-                Investor Dashboard
-              </NavLink>
-            </li>
-          )}
-          {!isLandingPage && walletAddress && userRole === 'exporter' && (
-            <li>
-              <NavLink to="/exporter" className={({ isActive }) => isActive ? 'active' : ''}>
-                Exporter Portal
-              </NavLink>
-            </li>
-          )}
-          {walletAddress && (
+          
+          {userRole && (
             <>
+              {userRole === 'investor' && (
+                <>
+                  <li>
+                    <NavLink to="/dashboard" className={({ isActive }) => isActive ? 'active' : ''}>
+                      Investor Dashboard
+                    </NavLink>
+                  </li>
+                </>
+              )}
+              {userRole === 'exporter' && (
+                <li>
+                  <NavLink to="/exporter" className={({ isActive }) => isActive ? 'active' : ''}>
+                    Exporter Portal
+                  </NavLink>
+                </li>
+              )}
+              {userRole === 'admin' && (
+                <li>
+                  <NavLink to="/admin" className={({ isActive }) => isActive ? 'active' : ''}>
+                    Admin
+                  </NavLink>
+                </li>
+              )}
               <li>
                 <NavLink to="/trade-passport" className={({ isActive }) => isActive ? 'active' : ''}>
                   Trade Passport
@@ -81,35 +90,31 @@ export default function Navbar({ walletAddress, userRole, connecting, onConnect,
               </li>
             </>
           )}
-          {(isLandingPage || !walletAddress) && (
-            <li>
-              <NavLink to="/how-it-works" className={({ isActive }) => isActive ? 'active' : ''}>
-                How It Works
-              </NavLink>
-            </li>
-          )}
-          {!isLandingPage && userRole === 'admin' && (
-            <li>
-              <NavLink to="/admin" className={({ isActive }) => isActive ? 'active' : ''}>
-                Admin
-              </NavLink>
-            </li>
-          )}
+
+          <li>
+            <NavLink to="/how-it-works" className={({ isActive }) => isActive ? 'active' : ''}>
+              How It Works
+            </NavLink>
+          </li>
+
+
         </ul>
 
         {/* Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <NetworkStatusIndicator />
-          {walletAddress ? (
-            <WalletConnectButton 
-              walletAddress={walletAddress}
-              connecting={connecting}
-              onConnect={onConnect}
-              onDisconnect={onDisconnect}
-            />
+          {userRole ? (
+            <>
+              <NetworkStatusIndicator />
+              <WalletConnectButton 
+                walletAddress={walletAddress}
+                connecting={connecting}
+                onConnect={onConnect}
+                onDisconnect={onDisconnect}
+              />
+            </>
           ) : (
-            <button className="btn btn-outline btn-sm" onClick={onConnect}>
-              Connect Wallet
+            <button className="btn btn-primary btn-sm" onClick={onOpenLogin}>
+              Login
             </button>
           )}
         </div>
