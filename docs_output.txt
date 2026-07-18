@@ -1,0 +1,161 @@
+﻿=== PRD ===
+Aletheia Product Requirements Document (PRD)
+Version: 1.0
+Tagline: Truth in Trade, Trust in Time
+1. Vision
+Build the world's most trusted digital trade finance infrastructure on Stellar, enabling verified receivables to become programmable financial assets.
+2. Mission
+Unlock working capital for exporters while providing transparent investment opportunities through tokenized trade receivables.
+3. Problem Statement
+Exporters often wait 30ΓÇô180 days for payment due to trade credit terms. Traditional financing is slow, expensive, and paperwork-heavy.
+4. Target Users
+Organizations: Exporters, Buyers, Investors, Banks, NBFCs, Insurers, Logistics Providers, Export Councils.
+Users: Finance Managers, Trade Managers, Investors, Operations Teams, Platform Administrators.
+5. Value Proposition
+Verified trade, programmable settlement, transparent investment marketplace, Trade Passport identity, reputation-based trust, Stellar-powered payments.
+6. Core Platform Modules
+ΓÇó Authentication & Identity
+ΓÇó Organization Management
+ΓÇó Trade Passport
+ΓÇó Wallet Management
+ΓÇó Receivable Management
+ΓÇó Shipment Tracking
+ΓÇó Verification Service
+ΓÇó Risk Engine
+ΓÇó Insurance
+ΓÇó Trade Exchange
+ΓÇó Investment
+ΓÇó Settlement Engine
+ΓÇó Reputation Engine
+ΓÇó AI Copilot
+ΓÇó Analytics
+ΓÇó Notifications
+ΓÇó Operations Center
+ΓÇó Developer APIs
+7. Core Business Workflow
+1. Organization Registration
+2. KYB Verification
+3. Trade Passport Issued
+4. Stellar Wallet Linked
+5. Receivable Created
+6. Documents Uploaded
+7. Independent Verification
+8. Risk Assessment
+9. Insurance (Optional)
+10. Tokenization
+11. Listed on Trade Exchange
+12. Investors Invest
+13. Exporter Receives Liquidity
+14. Buyer Pays Settlement Wallet
+15. Smart Contract Settlement
+16. Reputation Updated
+8. Trade Passport
+Persistent business identity containing KYB status, wallet, reputation, trade history, risk metrics, certifications, settlement history, and trust score.
+9. Revenue Model
+ΓÇó Marketplace Fees
+ΓÇó Settlement Fees
+ΓÇó Premium Analytics
+ΓÇó Trade Passport Pro
+ΓÇó AI Copilot Subscription
+ΓÇó API Licensing
+ΓÇó Insurance Referral
+ΓÇó Secondary Market Trading Fees
+10. Technology Stack
+Frontend: React, Vite, Tailwind CSS
+Backend: Node.js, Express, Prisma
+Database: SQLite ΓåÆ PostgreSQL
+Blockchain: Stellar, Soroban, USDC, Horizon
+AI: Groq + RAG
+Storage: IPFS/Pinata
+11. MVP Scope
+Included:
+ΓÇó Organization onboarding
+ΓÇó Trade Passport
+ΓÇó Receivable creation
+ΓÇó Verification workflow
+ΓÇó Marketplace
+ΓÇó Investment
+ΓÇó Stellar wallet integration
+ΓÇó Settlement
+ΓÇó Operations Center
+
+Future:
+ΓÇó Secondary market
+ΓÇó Trade DNA
+ΓÇó Insurance marketplace
+ΓÇó ERP integrations
+ΓÇó Mobile app
+12. Engineering Roadmap
+Phase 1 Business Architecture
+Phase 2 System Architecture
+Phase 3 Database
+Phase 4 Backend
+Phase 5 Stellar Integration
+Phase 6 Frontend
+Phase 7 AI Copilot
+Phase 8 Testing
+Phase 9 Deployment
+Guiding Principle
+Aletheia is not a cryptocurrency platform. It is a Trade Trust Network built on Stellar. Blockchain is the infrastructure; trust, verification, and liquidity are the product.
+
+=== BLUEPRINT ===
+Aletheia Product Blueprint ΓÇô Sprint 0
+Tagline: Truth in Trade, Trust in Time
+Vision: Build Aletheia as a real-world, Stellar-powered trade finance network that transforms verified international trade receivables into programmable financial assets, enabling exporters to unlock liquidity, investors to finance real trade, and buyers to establish trusted payment reputations.
+Project Philosophy
+Aletheia is not merely an invoice tokenization platform. It is a trust infrastructure for global trade finance. Blockchain is the enabling infrastructure, while trust, transparency, liquidity, and automation are the core products.
+Core Mission
+ΓÇó Create programmable trust for international trade.
+ΓÇó Unlock liquidity for exporters without waiting for long payment terms.
+ΓÇó Provide investors access to verified trade-finance opportunities.
+ΓÇó Build transparent digital identities and reputations for every stakeholder.
+Platform Ecosystem
+Four Product Pillars
+Trade Passport
+Digital identity, compliance, reputation, trade history and Stellar wallet.
+Trade Exchange
+Marketplace where verified trade assets are financed.
+Settlement Network
+USDC settlement, Stellar assets, Soroban smart contracts and automated distributions.
+Intelligence Layer
+Risk engine, AI copilot, fraud detection and portfolio analytics.
+Trade Asset
+A Trade Asset is the investment unit. It combines:
+- Commercial Invoice
+- Purchase Order
+- Bill of Lading
+- Shipping Bill
+- Insurance Information
+- Exporter Trade Passport
+- Buyer Profile
+- Risk Score
+- Verification Status
+- Tokenization Metadata
+Revenue Model
+1. Funding transaction fees
+2. Secondary market trading fees
+3. Premium Trade Passport subscriptions
+4. API licensing for banks and ERP providers
+5. AI-powered analytics subscriptions
+6. Institutional dashboards
+7. White-label platform licensing
+8. Insurance and compliance facilitation fees
+Technology Vision
+Frontend: React + Vite
+Backend: Node.js + Express
+Database: SQLite (development) ΓåÆ PostgreSQL (production)
+Blockchain: Stellar + Soroban
+Settlement Asset: USDC on Stellar
+Network Utility: XLM
+Storage: IPFS
+AI: Retrieval-Augmented Generation (RAG) with financial copilot capabilities
+Development Roadmap
+Sprint 0 ΓÇô Product Blueprint
+Sprint 1 ΓÇô Platform Foundation
+Sprint 2 ΓÇô Trade Passport & User Modules
+Sprint 3 ΓÇô Marketplace & Tokenization
+Sprint 4 ΓÇô Settlement & Smart Contracts
+Sprint 5 ΓÇô AI Copilot & Analytics
+Sprint 6 ΓÇô Production Readiness
+Final Vision Statement
+Aletheia is a Stellar-powered digital trade finance network that transforms verified international trade receivables into programmable financial assets, enabling exporters to access immediate liquidity, investors to finance real-world trade opportunities, and buyers to build verifiable payment reputations through transparent settlement, programmable smart contracts, and trusted digital identities.
