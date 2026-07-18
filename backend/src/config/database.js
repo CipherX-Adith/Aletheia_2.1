@@ -1,11 +1,7 @@
-import { createRequire } from 'module';
+import { PrismaClient } from '@prisma/client';
 import pg from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { env } from './env.js';
-
-const require = createRequire(import.meta.url);
-const { PrismaClient } = require('../../generated/prisma/index.js');
-
 const globalForPrisma = globalThis;
 
 if (!globalForPrisma.prisma) {
