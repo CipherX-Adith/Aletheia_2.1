@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { formatAddress } from '../stellar/client.js';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export default function TradePassport({ walletAddress, onConnect }) {
   const [passport, setPassport] = useState(null);

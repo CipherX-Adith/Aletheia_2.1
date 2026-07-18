@@ -34,10 +34,10 @@ router.post('/auth/login', async (req, res, next) => {
     // Enforce role-based portal access
     if (requested_role && role !== 'admin') {
       if (requested_role === 'investor' && role !== 'investor') {
-        return res.status(403).json({ error: 'Access denied: Exporter account cannot log in via the Investor portal.' });
+        return res.status(403).json({ error: 'You are currently using this account as an exporter.' });
       }
       if (requested_role === 'exporter' && role !== 'exporter') {
-        return res.status(403).json({ error: 'Access denied: Investor account cannot log in via the Exporter portal.' });
+        return res.status(403).json({ error: 'You are currently using this account as an investor.' });
       }
     }
 
@@ -56,8 +56,8 @@ router.post('/auth/login', async (req, res, next) => {
           data: {
             organizationId: user.organization.id,
             publicKey: current_wallet_address,
-            usdcBalance: 10000.0,
-            xlmBalance: 50.0
+            usdcBalance: 0.0,
+            xlmBalance: 0.0
           }
         });
         walletAddress = newWallet.publicKey;
@@ -85,6 +85,19 @@ router.post('/auth/register', async (req, res, next) => {
     if (!email || !password || !role) {
       return res.status(400).json({ error: 'Required fields missing' });
     }
+
+    // Check if the user already exists to provide a friendly role-specific warning message
+    const existingUser = await prisma.user.findUnique({
+      where: { email: email.toLowerCase().trim() },
+      include: { organization: true }
+    });
+    if (existingUser) {
+      const existingRole = existingUser.organization?.orgType === 'EXPORTER' ? 'exporter' : (existingUser.organization?.orgType === 'INVESTOR' ? 'investor' : 'admin');
+      return res.status(400).json({
+        error: `You are currently using this account as an ${existingRole}.`
+      });
+    }
+
     const firstName = full_name?.split(' ')[0] || username || 'User';
     const lastName = full_name?.split(' ').slice(1).join(' ') || '';
     const orgType = role === 'exporter' ? 'EXPORTER' : 'INVESTOR';
@@ -104,17 +117,25 @@ router.post('/auth/register', async (req, res, next) => {
 
     await prisma.wallet.create({
       data: {
-        organizationId: result.org.id,
+        organizationId: result.organization.id,
         publicKey,
         network: 'testnet',
-        usdcBalance: 10000.0,
-        xlmBalance: 50.0
+        usdcBalance: 0.0,
+        xlmBalance: 0.0
       }
     });
 
-    await prisma.tradePassport.create({
-      data: {
-        organizationId: result.org.id,
+    await prisma.tradePassport.upsert({
+      where: { organizationId: result.organization.id },
+      create: {
+        organizationId: result.organization.id,
+        status: 'ACTIVE',
+        kybStatus: 'APPROVED',
+        trustScore: 95,
+        reputationScore: 98,
+        activeSince: new Date()
+      },
+      update: {
         status: 'ACTIVE',
         kybStatus: 'APPROVED',
         trustScore: 95,
@@ -129,7 +150,7 @@ router.post('/auth/register', async (req, res, next) => {
       email: result.user.email,
       role,
       full_name: `${result.user.firstName} ${result.user.lastName}`,
-      company_name: result.org.name,
+      company_name: result.organization.name,
       wallet_address: publicKey,
       message: 'Registration successful'
     });
@@ -695,8 +716,8 @@ router.post('/wallet/sync-freighter', async (req, res, next) => {
         data: {
           organizationId: user.organization.id,
           publicKey: address,
-          usdcBalance: 10000.0,
-          xlmBalance: 50.0
+          usdcBalance: 0.0,
+          xlmBalance: 0.0
         }
       });
     }
@@ -732,8 +753,8 @@ router.get('/wallet/balance', async (req, res, next) => {
             data: {
               organizationId: user.organization.id,
               publicKey: address,
-              usdcBalance: 10000.0,
-              xlmBalance: 50.0
+              usdcBalance: 0.0,
+              xlmBalance: 0.0
             }
           });
         }
@@ -747,15 +768,52 @@ router.get('/wallet/balance', async (req, res, next) => {
         data: { name: orgName, legalName: orgName, orgType: 'EXPORTER', country: 'Singapore' }
       });
       wallet = await prisma.wallet.create({
-        data: { organizationId: org.id, publicKey: address, usdcBalance: 10000.0, xlmBalance: 50.0 }
+        data: { organizationId: org.id, publicKey: address, usdcBalance: 0.0, xlmBalance: 0.0 }
       });
+    }
+
+    // ── Query Horizon for REAL on-chain balances ──────────────────────
+    let xlmBalance = '0';
+    let usdcBalance = '0';
+    let onChain = false;
+
+    try {
+      const horizonUrl = process.env.STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org';
+      const horizonRes = await fetch(`${horizonUrl}/accounts/${address}`);
+      if (horizonRes.ok) {
+        const accountData = await horizonRes.json();
+        onChain = true;
+        for (const bal of accountData.balances) {
+          if (bal.asset_type === 'native') {
+            xlmBalance = bal.balance;
+          }
+          if (bal.asset_code === 'USDC') {
+            usdcBalance = bal.balance;
+          }
+        }
+
+        // Sync on-chain balances back to DB
+        await prisma.wallet.update({
+          where: { id: wallet.id },
+          data: {
+            xlmBalance: parseFloat(xlmBalance),
+            usdcBalance: parseFloat(usdcBalance),
+            lastSyncedAt: new Date()
+          }
+        });
+      }
+    } catch (horizonErr) {
+      console.warn('[Wallet Balance] Horizon query failed, using DB values:', horizonErr.message);
+      xlmBalance = String(wallet.xlmBalance || 0);
+      usdcBalance = String(wallet.usdcBalance || 0);
     }
 
     res.json({
       data: {
         publicKey: wallet.publicKey,
-        usdc: wallet.usdcBalance,
-        xlm: wallet.xlmBalance
+        usdc: usdcBalance,
+        xlm: xlmBalance,
+        onChain
       }
     });
   } catch (err) {
@@ -794,8 +852,8 @@ router.get('/wallet/transactions', async (req, res, next) => {
             data: {
               organizationId: user.organization.id,
               publicKey: address,
-              usdcBalance: 10000.0,
-              xlmBalance: 50.0
+              usdcBalance: 0.0,
+              xlmBalance: 0.0
             },
             include: { transactions: { orderBy: { createdAt: 'desc' } } }
           });
@@ -810,7 +868,7 @@ router.get('/wallet/transactions', async (req, res, next) => {
         data: { name: orgName, legalName: orgName, orgType: 'EXPORTER', country: 'Singapore' }
       });
       wallet = await prisma.wallet.create({
-        data: { organizationId: org.id, publicKey: address, usdcBalance: 10000.0, xlmBalance: 50.0 },
+        data: { organizationId: org.id, publicKey: address, usdcBalance: 0.0, xlmBalance: 0.0 },
         include: { transactions: { orderBy: { createdAt: 'desc' } } }
       });
     }
@@ -868,11 +926,42 @@ router.post('/wallet/fund-testnet', async (req, res, next) => {
 
     if (!wallet) return res.status(404).json({ error: 'Wallet not found' });
 
+    // Call Stellar Friendbot to fund the testnet account with real XLM
+    try {
+      const friendbotRes = await fetch(`https://friendbot.stellar.org?addr=${address}`);
+      if (!friendbotRes.ok) {
+        const errText = await friendbotRes.text();
+        console.warn('[Fund Testnet] Friendbot response:', errText);
+        // Friendbot may fail if already funded — that's OK, continue to sync
+      }
+    } catch (friendbotErr) {
+      console.warn('[Fund Testnet] Friendbot call failed:', friendbotErr.message);
+    }
+
+    // Query Horizon for actual on-chain balance after funding
+    let xlmBalance = wallet.xlmBalance;
+    let usdcBalance = wallet.usdcBalance;
+
+    try {
+      const horizonUrl = process.env.STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org';
+      const horizonRes = await fetch(`${horizonUrl}/accounts/${address}`);
+      if (horizonRes.ok) {
+        const accountData = await horizonRes.json();
+        for (const bal of accountData.balances) {
+          if (bal.asset_type === 'native') xlmBalance = parseFloat(bal.balance);
+          if (bal.asset_code === 'USDC') usdcBalance = parseFloat(bal.balance);
+        }
+      }
+    } catch (horizonErr) {
+      console.warn('[Fund Testnet] Horizon sync failed:', horizonErr.message);
+    }
+
     await prisma.wallet.update({
       where: { id: wallet.id },
       data: {
-        usdcBalance: wallet.usdcBalance + 10000.0,
-        xlmBalance: wallet.xlmBalance + 50.0
+        xlmBalance,
+        usdcBalance,
+        lastSyncedAt: new Date()
       }
     });
 
@@ -880,13 +969,13 @@ router.post('/wallet/fund-testnet', async (req, res, next) => {
       data: {
         walletId: wallet.id,
         type: 'FUND',
-        amount: 10000.0,
-        asset: 'USDC',
+        amount: xlmBalance,
+        asset: 'XLM',
         status: 'CONFIRMED'
       }
     });
 
-    res.json({ success: true });
+    res.json({ success: true, xlm: xlmBalance, usdc: usdcBalance });
   } catch (err) {
     next(err);
   }

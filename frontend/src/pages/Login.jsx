@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -126,98 +126,100 @@ export default function Login({ isOpen, onClose, onLogin, currentWalletAddress }
   };
 
   /* ── Google Sign-In / Sign-Up ───────────────────────────────── */
-  const handleGoogle = useCallback(() => {
-    if (!GOOGLE_CLIENT_ID) {
-      setError('Google OAuth is not configured. Add VITE_GOOGLE_CLIENT_ID to your .env file.');
-      return;
-    }
-    if (!gisReady || !window.google?.accounts) {
-      setError('Google Sign-In is still loading. Please try again in a moment.');
-      return;
-    }
+  const handleGoogleCallback = useCallback(async (response) => {
+    const payload = decodeJwt(response.credential);
+    if (!payload) { setError('Invalid Google token received.'); return; }
 
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: async (response) => {
-        const payload = decodeJwt(response.credential);
-        if (!payload) { setError('Invalid Google token received.'); return; }
+    setLoading(true); setError('');
+    try {
+      /* Try login first; if user not found, auto-register them */
+      const loginRes = await fetch(`${API}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identifier: payload.email,
+          password: `GOOGLE_${payload.sub}`,     // deterministic token-based secret
+          requested_role: activeTab,
+          current_wallet_address: currentWalletAddress
+        })
+      });
 
-        setLoading(true); setError('');
-        try {
-          /* Try login first; if user not found, auto-register them */
-          const loginRes = await fetch(`${API}/api/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              identifier: payload.email,
-              password: `GOOGLE_${payload.sub}`,     // deterministic token-based secret
-              requested_role: activeTab,
-              current_wallet_address: currentWalletAddress
-            })
-          });
+      if (loginRes.ok) {
+        const data = await loginRes.json();
+        const walletAddr = data.wallet_address || `USER_${data.id}_${data.role.toUpperCase()}`;
+        onLogin(walletAddr, data.role, data.email);
+        onClose();
+        if (data.role === 'admin') navigate('/admin');
+        else if (data.role === 'investor') navigate('/dashboard');
+        else navigate('/exporter');
+        return;
+      }
 
-          if (loginRes.ok) {
-            const data = await loginRes.json();
-            const walletAddr = data.wallet_address || `USER_${data.id}_${data.role.toUpperCase()}`;
-            onLogin(walletAddr, data.role, data.email);
-            onClose();
-            if (data.role === 'admin') navigate('/admin');
-            else if (data.role === 'investor') navigate('/dashboard');
-            else navigate('/exporter');
-            return;
-          }
-
-          /* User not found → register automatically */
-          const baseUsername = (payload.email.split('@')[0] + '_' + payload.sub.slice(-4)).replace(/[^a-z0-9_]/gi, '_');
-          const regRes = await fetch(`${API}/api/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              username: baseUsername,
-              email: payload.email,
-              password: `GOOGLE_${payload.sub}`,
-              role: activeTab,
-              full_name: payload.name || '',
-            })
-          });
-          const regData = await regRes.json();
-          if (!regRes.ok) { setError(regData.error || 'Google sign-up failed.'); setLoading(false); return; }
-
-          /* Log in the newly created account */
-          const login2Res = await fetch(`${API}/api/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              identifier: payload.email,
-              password: `GOOGLE_${payload.sub}`,
-              requested_role: activeTab,
-              current_wallet_address: currentWalletAddress
-            })
-          });
-          const login2Data = await login2Res.json();
-          if (!login2Res.ok) { setError(login2Data.error || 'Auto-login after Google sign-up failed.'); setLoading(false); return; }
-
-          const walletAddr = login2Data.wallet_address || `USER_${login2Data.id}_${login2Data.role.toUpperCase()}`;
-          onLogin(walletAddr, login2Data.role, login2Data.email);
-          onClose();
-          if (login2Data.role === 'investor') navigate('/dashboard');
-          else navigate('/exporter');
-        } catch { setError('Cannot reach server. Make sure the API is running.'); }
+      if (loginRes.status === 403) {
+        const data = await loginRes.json();
+        setError(data.error || 'Access denied.');
         setLoading(false);
+        return;
       }
-    });
 
-    window.google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        /* Fallback: render a one-tap button in a hidden div */
-        const div = document.getElementById('__gsi_btn_hidden__');
-        if (div) {
-          window.google.accounts.id.renderButton(div, { theme: 'outline', size: 'large' });
-          div.querySelector('div[role=button]')?.click();
-        }
+      /* User not found → register automatically */
+      const baseUsername = (payload.email.split('@')[0] + '_' + payload.sub.slice(-4)).replace(/[^a-z0-9_]/gi, '_');
+      const regRes = await fetch(`${API}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: baseUsername,
+          email: payload.email,
+          password: `GOOGLE_${payload.sub}`,
+          role: activeTab,
+          full_name: payload.name || '',
+        })
+      });
+      const regData = await regRes.json();
+      if (!regRes.ok) { setError(regData.error || 'Google sign-up failed.'); setLoading(false); return; }
+
+      /* Log in the newly created account */
+      const login2Res = await fetch(`${API}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identifier: payload.email,
+          password: `GOOGLE_${payload.sub}`,
+          requested_role: activeTab,
+          current_wallet_address: currentWalletAddress
+        })
+      });
+      const login2Data = await login2Res.json();
+      if (!login2Res.ok) { setError(login2Data.error || 'Auto-login after Google sign-up failed.'); setLoading(false); return; }
+
+      const walletAddr = login2Data.wallet_address || `USER_${login2Data.id}_${login2Data.role.toUpperCase()}`;
+      onLogin(walletAddr, login2Data.role, login2Data.email);
+      onClose();
+      if (login2Data.role === 'investor') navigate('/dashboard');
+      else navigate('/exporter');
+    } catch { setError('Cannot reach server. Make sure the API is running.'); }
+    setLoading(false);
+  }, [activeTab, navigate, onLogin, onClose, currentWalletAddress]);
+
+  const googleBtnRefCallback = useCallback((node) => {
+    if (node && gisReady && GOOGLE_CLIENT_ID) {
+      try {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleCallback,
+        });
+        window.google.accounts.id.renderButton(node, {
+          theme: 'outline',
+          size: 'large',
+          text: mode === 'login' ? 'signin_with' : 'signup_with',
+          shape: 'pill',
+          width: 280,
+        });
+      } catch (err) {
+        console.error('Error rendering Google Sign-In button:', err);
       }
-    });
-  }, [gisReady, activeTab, navigate, onLogin, onClose]);
+    }
+  }, [gisReady, mode, handleGoogleCallback]);
 
   if (!isOpen) return null;
 
@@ -542,25 +544,15 @@ export default function Login({ isOpen, onClose, onLogin, currentWalletAddress }
 
                 <div className="lg-or">or continue with</div>
 
-                <div className="lg-btns-row">
-                  {/* Apple — visual only */}
-                  <button type="button" className="lg-btn-sec"
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                  <div ref={googleBtnRefCallback} style={{ minHeight: '40px', display: 'flex', justifyContent: 'center' }} />
+                  
+                  <button type="button" className="lg-btn-sec" style={{ width: '100%', maxWidth: '280px', borderRadius: '999px' }}
                     onClick={() => alert('Apple Sign-In coming soon!')}>
-                    <svg width="14" height="14" viewBox="0 0 814 1000" fill="currentColor">
+                    <svg width="14" height="14" viewBox="0 0 814 1000" fill="currentColor" style={{ marginRight: '6px' }}>
                       <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-37.5-155.5-127.4C46.7 790.7 0 663 0 541.8c0-207.5 135.4-317.3 269-317.3 69.9 0 128.2 43.1 166.5 43.1 36.5 0 105.1-45.6 183.4-45.6z" />
                     </svg>
-                    Apple
-                  </button>
-
-                  {/* Google — functional */}
-                  <button type="button" className="lg-btn-sec" onClick={handleGoogle}>
-                    <svg width="14" height="14" viewBox="0 0 24 24">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                    </svg>
-                    Google
+                    Continue with Apple
                   </button>
                 </div>
               </form>
@@ -645,25 +637,15 @@ export default function Login({ isOpen, onClose, onLogin, currentWalletAddress }
 
                 <div className="lg-or">or sign up with</div>
 
-                <div className="lg-btns-row">
-                  {/* Apple — visual only */}
-                  <button type="button" className="lg-btn-sec"
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                  <div ref={googleBtnRefCallback} style={{ minHeight: '40px', display: 'flex', justifyContent: 'center' }} />
+                  
+                  <button type="button" className="lg-btn-sec" style={{ width: '100%', maxWidth: '280px', borderRadius: '999px' }}
                     onClick={() => alert('Apple Sign-Up coming soon!')}>
-                    <svg width="14" height="14" viewBox="0 0 814 1000" fill="currentColor">
+                    <svg width="14" height="14" viewBox="0 0 814 1000" fill="currentColor" style={{ marginRight: '6px' }}>
                       <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-37.5-155.5-127.4C46.7 790.7 0 663 0 541.8c0-207.5 135.4-317.3 269-317.3 69.9 0 128.2 43.1 166.5 43.1 36.5 0 105.1-45.6 183.4-45.6z" />
                     </svg>
-                    Apple
-                  </button>
-
-                  {/* Google — functional */}
-                  <button type="button" className="lg-btn-sec" onClick={handleGoogle}>
-                    <svg width="14" height="14" viewBox="0 0 24 24">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                    </svg>
-                    Google
+                    Continue with Apple
                   </button>
                 </div>
               </form>

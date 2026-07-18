@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import WalletConnectButton from './WalletConnectButton.jsx';
 import NetworkStatusIndicator from './NetworkStatusIndicator.jsx';
 
-export default function Navbar({ walletAddress, userRole, connecting, onConnect, onDisconnect, onOpenLogin }) {
+export default function Navbar({ walletAddress, userRole, connecting, onConnect, onDisconnect, onLogout, onOpenLogin, isFreighterConnected }) {
   const location = useLocation();
 
   return (
@@ -78,11 +78,7 @@ export default function Navbar({ walletAddress, userRole, connecting, onConnect,
                   </NavLink>
                 </li>
               )}
-              <li>
-                <NavLink to="/trade-passport" className={({ isActive }) => isActive ? 'active' : ''}>
-                  Trade Passport
-                </NavLink>
-              </li>
+
               <li>
                 <NavLink to="/wallet" className={({ isActive }) => isActive ? 'active' : ''}>
                   Stellar Wallet
@@ -110,7 +106,20 @@ export default function Navbar({ walletAddress, userRole, connecting, onConnect,
                 connecting={connecting}
                 onConnect={onConnect}
                 onDisconnect={onDisconnect}
+                isFreighterConnected={isFreighterConnected}
               />
+              <button 
+                className="btn btn-ghost btn-sm"
+                onClick={onLogout}
+                style={{
+                  padding: '6px 10px',
+                  color: 'var(--color-text-secondary)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-md)'
+                }}
+              >
+                Logout
+              </button>
             </>
           ) : (
             <button className="btn btn-primary btn-sm" onClick={onOpenLogin}>

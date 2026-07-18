@@ -1,13 +1,16 @@
 import { createRequire } from 'module';
-import path from 'path';
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import bcrypt from 'bcrypt';
+import dotenv from 'dotenv';
+import pg from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
+
+dotenv.config();
 
 const require = createRequire(import.meta.url);
 const { PrismaClient } = require('../generated/prisma/index.js');
 
-const dbPath = path.resolve(process.cwd(), 'dev.db');
-const adapter = new PrismaBetterSqlite3({ url: 'file:' + dbPath });
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
@@ -35,8 +38,8 @@ async function main() {
 
   const adminHash = await bcrypt.hash('admin123', 12);
   const exporterHash = await bcrypt.hash('exporter123', 12);
-  const buyerHash = await bcrypt.hash('buyer123', 12);
   const investorHash = await bcrypt.hash('investor123', 12);
+
 
   // 1. Platform Admin
   const adminUser = await prisma.user.create({
@@ -106,7 +109,7 @@ async function main() {
     },
   });
 
-  // 3. Buyer Organization
+  // 3. Buyer Organization (Counterparty, Offline only - no user portal/login credentials)
   const buyerOrg = await prisma.organization.create({
     data: {
       name: 'Euro Apparel Logistics',
@@ -117,26 +120,6 @@ async function main() {
       address: '12 Logistics Strasse',
       taxId: 'TAX-GER-9988',
       registrationNumber: 'REG-GER-1122',
-    },
-  });
-
-  const buyerUser = await prisma.user.create({
-    data: {
-      email: 'buyer@euroapparel.de',
-      passwordHash: buyerHash,
-      firstName: 'Hans',
-      lastName: 'Mueller',
-      role: 'ORG_ADMIN',
-      organizationId: buyerOrg.id,
-      isEmailVerified: true,
-    },
-  });
-
-  await prisma.organizationMember.create({
-    data: {
-      userId: buyerUser.id,
-      organizationId: buyerOrg.id,
-      role: 'ORG_ADMIN',
     },
   });
 
@@ -160,6 +143,7 @@ async function main() {
       usdcBalance: 25000.0,
     },
   });
+
 
   // 4. Investor Organization
   const investorOrg = await prisma.organization.create({

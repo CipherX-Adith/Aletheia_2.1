@@ -9,7 +9,7 @@ import Marketplace from './pages/Marketplace.jsx';
 import ReceivableDetail from './pages/ReceivableDetail.jsx';
 import HowItWorks from './pages/HowItWorks.jsx';
 import Login from './pages/Login.jsx';
-import TradePassport from './pages/TradePassport.jsx';
+
 import Wallet from './pages/Wallet.jsx';
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
@@ -30,6 +30,7 @@ const ProtectedRoute = ({ element, role, walletAddress, userRole, setShowLoginMo
 export default function App() {
   const [walletAddress, setWalletAddress] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [isFreighterConnected, setIsFreighterConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [showMobileModal, setShowMobileModal] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
@@ -47,12 +48,15 @@ export default function App() {
   useEffect(() => {
     const storedAddr = localStorage.getItem('userAddress');
     const storedRole = localStorage.getItem('userRole');
+    const storedFreighter = localStorage.getItem('isFreighterConnected') === 'true';
     if (storedAddr && storedRole) {
       setWalletAddress(storedAddr);
       setUserRole(storedRole);
+      setIsFreighterConnected(storedFreighter);
     } else {
       setWalletAddress(null);
       setUserRole(null);
+      setIsFreighterConnected(false);
     }
   }, []);
 
@@ -66,12 +70,19 @@ export default function App() {
     }
   };
 
-  const handleDisconnect = () => {
+  const handleDisconnectWallet = () => {
+    setIsFreighterConnected(false);
+    localStorage.removeItem('isFreighterConnected');
+  };
+
+  const handleLogout = () => {
     setWalletAddress(null);
     setUserRole(null);
+    setIsFreighterConnected(false);
     localStorage.removeItem('userAddress');
     localStorage.removeItem('userRole');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('isFreighterConnected');
     navigate('/login');
   };
 
@@ -124,7 +135,7 @@ export default function App() {
         }
         const email = localStorage.getItem('userEmail');
         if (email) {
-          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
           try {
             await fetch(`${API_URL}/api/wallet/sync-freighter`, {
               method: 'POST',
@@ -135,6 +146,8 @@ export default function App() {
             console.error('Failed to sync Freighter wallet with backend', e);
           }
         }
+        localStorage.setItem('isFreighterConnected', 'true');
+        setIsFreighterConnected(true);
         handleLogin(address, role, email);
       } else {
         setShowMobileModal(true);
@@ -166,8 +179,10 @@ export default function App() {
         userRole={userRole}
         connecting={connecting}
         onConnect={handleConnect}
-        onDisconnect={handleDisconnect}
+        onDisconnect={handleDisconnectWallet}
+        onLogout={handleLogout}
         onOpenLogin={() => setShowLoginModal(true)}
+        isFreighterConnected={isFreighterConnected}
       />
 
       {/* Main Content Area */}
@@ -175,7 +190,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Landing walletAddress={walletAddress} userRole={userRole} onConnect={handleConnect} onOpenLogin={() => setShowLoginModal(true)} />} />
           <Route path="/marketplace" element={<Marketplace userRole={userRole} onOpenLogin={() => setShowLoginModal(true)} />} />
-          <Route path="/trade-passport" element={<TradePassport walletAddress={walletAddress} onConnect={handleConnect} />} />
+
           <Route path="/wallet" element={<Wallet walletAddress={walletAddress} onConnect={handleConnect} />} />
           <Route path="/receivable/:id" element={<ReceivableDetail walletAddress={walletAddress} onConnect={handleConnect} />} />
           <Route path="/dashboard" element={<ProtectedRoute element={<InvestorDashboard walletAddress={walletAddress} onConnect={handleConnect} />} role="investor" walletAddress={walletAddress} userRole={userRole} setShowLoginModal={setShowLoginModal} />} />
