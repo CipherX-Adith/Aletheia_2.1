@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { receivablesApi, authApi, oracleApi, formatUsd } from '../stellar/client.js';
+import { receivablesApi, authApi, oracleApi, formatUsd, HORIZON_EXPLORER_URL } from '../stellar/client.js';
 
 import { StatusBadge } from '../components/ReceivableCard.jsx';
 import { AttestationMini } from '../components/ReceivableCard.jsx';
@@ -306,7 +306,7 @@ export default function AdminPanel({ walletAddress }) {
                               {/* Stellar Expert link if we have a real tx hash */}
                               {event.proof && event.proof.length === 64 && !event.proof.startsWith('demo') && (
                                 <a
-                                  href={`https://stellar.expert/explorer/testnet/tx/${event.proof}`}
+                                  href={`${HORIZON_EXPLORER_URL}/tx/${event.proof}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-ui-xs"

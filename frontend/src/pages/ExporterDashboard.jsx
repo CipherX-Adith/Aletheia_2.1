@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DocumentUpload from '../components/DocumentUpload.jsx';
 import { AttestationMini, StatusBadge } from '../components/ReceivableCard.jsx';
 import { useReceivables } from '../hooks/useReceivables.js';
-import { receivablesApi, formatUsd, daysUntil } from '../stellar/client.js';
+import { receivablesApi, formatUsd, daysUntil, HORIZON_EXPLORER_URL } from '../stellar/client.js';
 
 
 const COMMODITIES = [
@@ -456,7 +456,7 @@ function ExporterReceivableRow({ rec }) {
           <span className="badge badge-attested" style={{ fontSize: '0.6rem' }}>{rec.token_asset_code}</span>
           {rec.issuer_public_key && !rec.issuer_public_key.startsWith('demo') ? (
             <a
-              href={`https://stellar.expert/explorer/testnet/asset/${rec.token_asset_code}-${rec.issuer_public_key}`}
+              href={`${HORIZON_EXPLORER_URL}/asset/${rec.token_asset_code}-${rec.issuer_public_key}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-ui-xs"

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { formatAddress } from '../stellar/client.js';
+import { formatAddress, HORIZON_EXPLORER_URL } from '../stellar/client.js';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const isTestnet = (import.meta.env.VITE_STELLAR_NETWORK || 'testnet').toLowerCase() === 'testnet';
 
 export default function Wallet({ walletAddress, onConnect }) {
   const [wallet, setWallet] = useState(null);
@@ -201,12 +202,14 @@ export default function Wallet({ walletAddress, onConnect }) {
                   >
                     {copied ? 'Copied' : 'Copy'}
                   </button>
-                  <button
-                    onClick={handleFundTestnet}
-                    className="btn btn-saffron btn-sm"
-                  >
-                    Fund Testnet
-                  </button>
+                  {isTestnet && (
+                    <button
+                      onClick={handleFundTestnet}
+                      className="btn btn-saffron btn-sm"
+                    >
+                      Fund Testnet
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -215,7 +218,7 @@ export default function Wallet({ walletAddress, onConnect }) {
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
               <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', margin: 0 }}>Recent Transactions</h3>
-                <span className="text-ui-xs text-secondary">Testnet network activity</span>
+                <span className="text-ui-xs text-secondary">{isTestnet ? 'Testnet' : 'Mainnet'} network activity</span>
               </div>
               {transactions.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
@@ -245,7 +248,7 @@ export default function Wallet({ walletAddress, onConnect }) {
                         </p>
                         {tx.txHash && (
                           <a
-                            href={`https://stellar.expert/explorer/testnet/tx/${tx.txHash}`}
+                            href={`${HORIZON_EXPLORER_URL}/tx/${tx.txHash}`}
                             target="_blank"
                             rel="noreferrer"
                             className="text-ui-xs"

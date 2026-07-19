@@ -56,6 +56,7 @@ router.post('/auth/login', async (req, res, next) => {
           data: {
             organizationId: user.organization.id,
             publicKey: current_wallet_address,
+            network: process.env.STELLAR_NETWORK || 'mainnet',
             usdcBalance: 0.0,
             xlmBalance: 0.0
           }
@@ -119,7 +120,7 @@ router.post('/auth/register', async (req, res, next) => {
       data: {
         organizationId: result.organization.id,
         publicKey,
-        network: 'testnet',
+        network: process.env.STELLAR_NETWORK || 'mainnet',
         usdcBalance: 0.0,
         xlmBalance: 0.0
       }
@@ -716,6 +717,7 @@ router.post('/wallet/sync-freighter', async (req, res, next) => {
         data: {
           organizationId: user.organization.id,
           publicKey: address,
+          network: process.env.STELLAR_NETWORK || 'mainnet',
           usdcBalance: 0.0,
           xlmBalance: 0.0
         }
@@ -753,6 +755,7 @@ router.get('/wallet/balance', async (req, res, next) => {
             data: {
               organizationId: user.organization.id,
               publicKey: address,
+              network: process.env.STELLAR_NETWORK || 'mainnet',
               usdcBalance: 0.0,
               xlmBalance: 0.0
             }
@@ -768,7 +771,7 @@ router.get('/wallet/balance', async (req, res, next) => {
         data: { name: orgName, legalName: orgName, orgType: 'EXPORTER', country: 'Singapore' }
       });
       wallet = await prisma.wallet.create({
-        data: { organizationId: org.id, publicKey: address, usdcBalance: 0.0, xlmBalance: 0.0 }
+        data: { organizationId: org.id, publicKey: address, network: process.env.STELLAR_NETWORK || 'mainnet', usdcBalance: 0.0, xlmBalance: 0.0 }
       });
     }
 
@@ -852,6 +855,7 @@ router.get('/wallet/transactions', async (req, res, next) => {
             data: {
               organizationId: user.organization.id,
               publicKey: address,
+              network: process.env.STELLAR_NETWORK || 'mainnet',
               usdcBalance: 0.0,
               xlmBalance: 0.0
             },
@@ -868,7 +872,7 @@ router.get('/wallet/transactions', async (req, res, next) => {
         data: { name: orgName, legalName: orgName, orgType: 'EXPORTER', country: 'Singapore' }
       });
       wallet = await prisma.wallet.create({
-        data: { organizationId: org.id, publicKey: address, usdcBalance: 0.0, xlmBalance: 0.0 },
+        data: { organizationId: org.id, publicKey: address, network: process.env.STELLAR_NETWORK || 'mainnet', usdcBalance: 0.0, xlmBalance: 0.0 },
         include: { transactions: { orderBy: { createdAt: 'desc' } } }
       });
     }

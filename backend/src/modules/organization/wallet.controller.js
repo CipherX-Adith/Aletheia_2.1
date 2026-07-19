@@ -1,6 +1,7 @@
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { prisma } from '../../config/database.js';
 import { horizonServer, USDC_ASSET, NETWORK_PASSPHRASE } from '../../config/stellar.js';
+import { env } from '../../config/env.js';
 import { AppError } from '../../common/errors/AppError.js';
 import { success, created } from '../../common/responses/index.js';
 import { logger } from '../../common/logger/index.js';
@@ -18,7 +19,7 @@ export async function createWallet(req, res, next) {
     const publicKey = keypair.publicKey();
 
     const wallet = await prisma.wallet.create({
-      data: { organizationId: orgId, publicKey, network: 'testnet' },
+      data: { organizationId: orgId, publicKey, network: env.STELLAR_NETWORK },
     });
 
     // Return public key (NEVER store or return secret key)
@@ -45,7 +46,7 @@ export async function connectWallet(req, res, next) {
     if (!orgId) throw AppError.badRequest('No organization linked to your account');
     const wallet = await prisma.wallet.upsert({
       where: { organizationId: orgId },
-      create: { organizationId: orgId, publicKey, network: 'testnet' },
+      create: { organizationId: orgId, publicKey, network: env.STELLAR_NETWORK },
       update: { publicKey },
     });
 

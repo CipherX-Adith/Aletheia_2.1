@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { receivablesApi, formatUsd, formatYield, daysUntil } from '../stellar/client.js';
+import { receivablesApi, formatUsd, formatYield, daysUntil, HORIZON_EXPLORER_URL } from '../stellar/client.js';
 import { signTransactionWithFreighter, executeSponsoredTrustline } from '../stellar/client.js';
 
 // ── Share Purchase Modal ───────────────────────────────────────
@@ -71,7 +71,7 @@ export default function SharePurchaseModal({ receivable, investorAddress, onClos
 
   if (success) {
     const explorerUrl = success.txHash && !success.txHash.startsWith('demo_')
-      ? `https://stellar.expert/explorer/testnet/tx/${success.txHash}`
+      ? `${HORIZON_EXPLORER_URL}/tx/${success.txHash}`
       : success.stellar_expert_url || null;
 
     return (

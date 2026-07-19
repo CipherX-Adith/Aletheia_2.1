@@ -11,6 +11,5 @@ export default defineConfig({
   datasource: {
     // Use direct (non-pooled) URL for migrations, fall back to DATABASE_URL
     url: process.env["DIRECT_URL"] || process.env["DATABASE_URL"],
-    directUrl: process.env["DIRECT_URL"],
   },
 });
