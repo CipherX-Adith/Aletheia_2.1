@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { formatAddress, HORIZON_EXPLORER_URL } from '../stellar/client.js';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'https://aletheia21-production.up.railway.app';
 const isTestnet = (import.meta.env.VITE_STELLAR_NETWORK || 'mainnet').toLowerCase() === 'testnet';
 
 export default function Wallet({ walletAddress, onConnect }) {

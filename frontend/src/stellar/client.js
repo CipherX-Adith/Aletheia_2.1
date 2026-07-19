@@ -10,7 +10,7 @@ import { Horizon, Networks, Asset } from '@stellar/stellar-sdk';
 
 const NETWORK = import.meta.env.VITE_STELLAR_NETWORK || 'mainnet';
 const HORIZON_URL = import.meta.env.VITE_HORIZON_URL || 'https://horizon.stellar.org';
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'https://aletheia21-production.up.railway.app';
 
 export const horizonServer = new Horizon.Server(HORIZON_URL);
 

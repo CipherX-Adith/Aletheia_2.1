@@ -135,7 +135,7 @@ export default function App() {
         }
         const email = localStorage.getItem('userEmail');
         if (email) {
-          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+          const API_URL = import.meta.env.VITE_API_URL || 'https://aletheia21-production.up.railway.app';
           try {
             await fetch(`${API_URL}/api/wallet/sync-freighter`, {
               method: 'POST',

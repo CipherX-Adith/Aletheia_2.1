@@ -25,8 +25,9 @@ app.use(
       
       const isLocalhost = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
       const isVercel = origin.endsWith('.vercel.app');
+      const isRailway = origin.endsWith('.up.railway.app');
       
-      if (isLocalhost || isVercel || allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+      if (isLocalhost || isVercel || isRailway || allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
         return callback(null, true);
       }
       

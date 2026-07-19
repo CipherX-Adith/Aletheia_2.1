@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { oracleApi } from '../stellar/client.js';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'https://aletheia21-production.up.railway.app';
 
 // ── Live Event Feed ───────────────────────────────────────────
 // Connects to the API's SSE stream (/api/stellar/stream/issuer)

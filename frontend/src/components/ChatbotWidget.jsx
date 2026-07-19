@@ -72,7 +72,7 @@ export default function ChatbotWidget({ walletAddress, userRole }) {
     try {
       // Build request context & history (last 5 messages)
       const chatHistory = messages.slice(-5);
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://aletheia21-production.up.railway.app';
 
       const response = await fetch(`${apiUrl}/api/chat`, {
         method: 'POST',
