@@ -8,8 +8,8 @@
 
 import { Horizon, Networks, Asset } from '@stellar/stellar-sdk';
 
-const NETWORK = import.meta.env.VITE_STELLAR_NETWORK || 'testnet';
-const HORIZON_URL = import.meta.env.VITE_HORIZON_URL || 'https://horizon-testnet.stellar.org';
+const NETWORK = import.meta.env.VITE_STELLAR_NETWORK || 'mainnet';
+const HORIZON_URL = import.meta.env.VITE_HORIZON_URL || 'https://horizon.stellar.org';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export const horizonServer = new Horizon.Server(HORIZON_URL);

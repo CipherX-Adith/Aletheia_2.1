@@ -1,7 +1,7 @@
 import React from 'react';
 
 export default function NetworkStatusIndicator() {
-  const network = import.meta.env.VITE_STELLAR_NETWORK || 'testnet';
+  const network = import.meta.env.VITE_STELLAR_NETWORK || 'mainnet';
   const isTestnet = network.toLowerCase() === 'testnet';
 
   return (

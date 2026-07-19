@@ -781,7 +781,7 @@ router.get('/wallet/balance', async (req, res, next) => {
     let onChain = false;
 
     try {
-      const horizonUrl = process.env.STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org';
+      const horizonUrl = process.env.STELLAR_HORIZON_URL || 'https://horizon.stellar.org';
       const horizonRes = await fetch(`${horizonUrl}/accounts/${address}`);
       if (horizonRes.ok) {
         const accountData = await horizonRes.json();
@@ -950,7 +950,7 @@ router.post('/wallet/fund-testnet', async (req, res, next) => {
     let usdcBalance = wallet.usdcBalance;
 
     try {
-      const horizonUrl = process.env.STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org';
+      const horizonUrl = process.env.STELLAR_HORIZON_URL || 'https://horizon.stellar.org';
       const horizonRes = await fetch(`${horizonUrl}/accounts/${address}`);
       if (horizonRes.ok) {
         const accountData = await horizonRes.json();
